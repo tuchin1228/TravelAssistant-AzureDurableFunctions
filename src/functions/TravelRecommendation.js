@@ -5,14 +5,21 @@ import AirbnbRecommend from '../lib/AirbnbRecommend.js';
 import GPTAggregationData from '../lib/GPTAggregationData.js';
 import SaveAzureStorage from '../lib/SaveAzureStorage.js';
 
-
-
-
 df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
     const outputs = [];
     const instanceId = context.df.instanceId;
 
-    const result = yield context.df.callActivity('GPTRecommendation', UserDemand);
+    // Get the input from the orchestration context
+    const userDemand = context.df.getInput();
+
+    if (!userDemand || !userDemand.destination) {
+        return {
+            success: false,
+            error: "Invalid input: destination is required"
+        };
+    }
+
+    const result = yield context.df.callActivity('GPTRecommendation', userDemand);
     outputs.push(result);
     context.log('GPTRecommendation result:', result);
 
@@ -29,9 +36,8 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
         return outputs;
     }
 
-
     const gptAggregationResult = yield context.df.callActivity('GPTAggregationData', {
-        UserDemand,
+        userDemand,
         AirbnbSearchResult: airbnbResult
     });
     outputs.push(gptAggregationResult);
@@ -57,21 +63,8 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
 
     }
 
-
-
-
     return outputs;
 });
-
-const UserDemand = {
-    destination: '日本',
-    travelDates: {
-        start: '2025-10-01',
-        end: '2025-10-5'
-    },
-    people: 2,
-    budget: 2000,
-};
 
 df.app.activity("GPTRecommendation", {
     handler: (input, context) => {
@@ -99,17 +92,49 @@ df.app.activity("SaveAzureStorage", {
     }
 });
 
-
+// HTTP trigger function to start the orchestration
 app.http('TravelRecommendationHttpStart', {
+    methods: ['POST'],
+    authLevel: 'anonymous',
     route: 'orchestrators/{orchestratorName}',
     extraInputs: [df.input.durableClient()],
     handler: async (request, context) => {
         const client = df.getClient(context);
-        const body = await request.text();
-        const instanceId = await client.startNew(request.params.orchestratorName, { input: body });
+
+
+        //  Step 1: 解析 body
+        let userDemand = null;
+        try {
+            userDemand = await request.json();
+        } catch (err) {
+            return {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ error: "Missing or invalid destination" }),
+            };
+        }
+
+
+        //  Step 2: 驗證 input 結構
+        if (!userDemand || !userDemand?.destination || typeof userDemand?.destination !== 'string') {
+            return {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ error: "Missing or invalid destination" }),
+            };
+        }
+
+
+        // Start the orchestration with the user input
+        const instanceId = await client.startNew(
+            request.params.orchestratorName,
+            {
+                input: userDemand
+            }
+        );
 
         context.log(`Started orchestration with ID = '${instanceId}'.`);
 
         return client.createCheckStatusResponse(request, instanceId);
-    },
+    }
 });
