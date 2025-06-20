@@ -37,7 +37,7 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
     }
 
     const gptAggregationResult = yield context.df.callActivity('GPTAggregationData', {
-        userDemand,
+        UserDemand: userDemand,
         AirbnbSearchResult: airbnbResult
     });
     outputs.push(gptAggregationResult);
@@ -116,11 +116,11 @@ app.http('TravelRecommendationHttpStart', {
 
 
         //  Step 2: 驗證 input 結構
-        if (!userDemand || !userDemand?.destination || typeof userDemand?.destination !== 'string') {
+        if (!userDemand || !userDemand?.destination || !userDemand?.people || !userDemand?.travelstart || !userDemand?.travelend || !userDemand?.budget) {
             return {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ error: "Missing or invalid destination" }),
+                body: JSON.stringify({ error: "Missing or invalid input" }),
             };
         }
 

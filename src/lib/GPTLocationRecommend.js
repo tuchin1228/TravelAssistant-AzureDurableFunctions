@@ -89,8 +89,8 @@ export default async function (input, context) {
                     用戶需求：        
                     國家:${input.destination}
                     人數：${input.people || 'Not specified'}
-                    旅行日期：${input.travelDates?.start || 'Not specified'} 到 ${input.travelDates?.end || 'Not specified'}
-                    每晚預算：${input.budget || 'Not specified'}`
+                    旅行日期：${input.travelstart || 'Not specified'} 到 ${input.travelend || 'Not specified'}
+                    每晚最大住宿金額：${input.budget || 'Not specified'}台幣`
             }]
         ,
     }, {
