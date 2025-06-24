@@ -8,7 +8,7 @@ export default async function (input, context) {
     context.log("input", input)
 
     // 檢查 Input 是否有效
-    if (!input?.UserDemand || !input.AirbnbSearchResult) {
+    if (!input?.UserDemand || !input?.AirbnbSearchResult) {
         throw new Error('Invalid input');
     }
 

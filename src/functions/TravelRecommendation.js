@@ -45,7 +45,7 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
         message: '透過GPT取得推薦的旅遊地點',
         startTime: new Date().toISOString(),
         progress: 30,
-        outputs: [],
+        outputs: result,
         errors: []
     });
 
@@ -70,7 +70,7 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
             startTime: new Date().toISOString(),
             progress: 100,
             outputs: "在Airbnb中沒有找到符合條件的住宿項目",
-            errors: []
+            errors: airbnbResult
         });
 
     } else {
@@ -79,7 +79,7 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
             message: '透過Airbnb取得推薦的住宿項目',
             startTime: new Date().toISOString(),
             progress: 60,
-            outputs: [],
+            outputs: airbnbResult,
             errors: []
         });
     }
