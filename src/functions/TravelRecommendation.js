@@ -211,7 +211,7 @@ app.http('TravelRecommendationHttpStart', {
 
 
         //  Step 2: 驗證 input 結構
-        if (!userDemand || !userDemand?.destination || !userDemand?.people || !userDemand?.travelstart || !userDemand?.travelend || !userDemand?.budget) {
+        if (!userDemand || !userDemand?.location || !userDemand?.people || !userDemand?.travelstart || !userDemand?.travelend || !userDemand?.budget) {
             return {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' },

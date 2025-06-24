@@ -28,6 +28,7 @@ export default async function (input, context) {
                     4. 所有超連結必須加上顏色與底線，並確保排版精緻。
                     5. 請回應所有評論與評價，並將其轉換為易讀的 HTML 格式。
                     6. 確保輸出內容不包含原始 JSON，僅提供易讀的 HTML 格式。
+                    7. 告訴來源說明告訴使用者本次推薦的旅遊城市
 
 
                     請依照以下格式對應，將資料彙整給使用者:
@@ -88,6 +89,8 @@ export default async function (input, context) {
                             required: ["location"]
                         }
                     };
+
+                    回應的開頭不須有"\n"
                     `
             }, 
             {
