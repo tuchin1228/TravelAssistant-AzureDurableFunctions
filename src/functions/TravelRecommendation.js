@@ -22,42 +22,60 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
     // 取得使用者輸入
     const userDemand = context.df.getInput();
 
-    // 檢查輸入屬性是否齊全
-    if (!userDemand || !userDemand.destination) {
-        return {
-            success: false,
-            error: "Invalid input: destination is required"
-        };
-    }
+    let gptResult;
+    try {
+        gptResult = yield context.df.callActivity('GPTRecommendation', userDemand);
+        outputs.push(gptResult);
+        context.log('GPTRecommendation result:', gptResult);
+        if (!gptResult.success) throw new Error('GPTRecommendation failed');
+        context.df.setCustomStatus({
+            stage: 'GetRecommendation',
+            message: '透過GPT取得推薦的旅遊地點',
+            startTime: new Date().toISOString(),
+            progress: 30,
+            outputs: [],
+            errors: []
+        });
 
-    // 透過GPT取得推薦的旅遊地點
-    const result = yield context.df.callActivity('GPTRecommendation', userDemand);
-    outputs.push(result);
-    context.log('GPTRecommendation result:', result);
-
-    if (!result.success) {
+    } catch (error) {
+        context.log('GPTRecommendation error:', error);
+        outputs.push({ task: 'GPTRecommendation', success: false, error: error.message });
+        context.df.setCustomStatus({
+            stage: 'GetRecommendation',
+            message: 'GPTRecommendation 發生錯誤',
+            startTime: new Date().toISOString(),
+            progress: 100,
+            outputs: [],
+            errors: [error.message]
+        });
         return outputs;
     }
 
 
-    context.df.setCustomStatus({
-        stage: 'GetRecommendation',
-        message: '透過GPT取得推薦的旅遊地點',
-        startTime: new Date().toISOString(),
-        progress: 30,
-        outputs: result,
-        errors: []
-    });
 
 
-    const AirbnbMCPdata = result.data;
 
+    const AirbnbMCPdata = gptResult.data;
+
+
+    let airbnbResult;
     // 透過GPT取得的資訊，向Airbnb MCP 取得推薦的住宿項目
-    const airbnbResult = yield context.df.callActivity('AirbnbRecommend', AirbnbMCPdata);
-    context.log('airbnbResult result:', airbnbResult);
-    outputs.push(airbnbResult);
+    try {
+        airbnbResult = yield context.df.callActivity('AirbnbRecommend', AirbnbMCPdata);
+        context.log('airbnbResult result:', airbnbResult);
+        outputs.push(airbnbResult);
 
-    if (!airbnbResult.success) {
+    } catch (error) {
+        context.log('透過Airbnb取得推薦的住宿項目發生錯誤:', error);
+        outputs.push({ task: 'AirbnbRecommend', success: false, error: error.message });
+        context.df.setCustomStatus({
+            stage: 'GetAirbnbRecommendation',
+            message: '透過Airbnb取得推薦的住宿項目發生錯誤',
+            startTime: new Date().toISOString(),
+            progress: 100,
+            outputs: [],
+            errors: [error.message]
+        });
         return outputs;
     }
 
@@ -70,7 +88,7 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
             startTime: new Date().toISOString(),
             progress: 100,
             outputs: "在Airbnb中沒有找到符合條件的住宿項目",
-            errors: airbnbResult
+            errors: []
         });
 
     } else {
@@ -79,29 +97,40 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
             message: '透過Airbnb取得推薦的住宿項目',
             startTime: new Date().toISOString(),
             progress: 60,
-            outputs: airbnbResult,
+            outputs: [],
             errors: []
         });
     }
 
 
+    let gptAggregationResult;
     // 將 GPT 和 Airbnb 的結果進行整合
-    const gptAggregationResult = yield context.df.callActivity('GPTAggregationData', {
-        UserDemand: userDemand,
-        AirbnbSearchResult: airbnbResult
-    });
-    outputs.push(gptAggregationResult);
-
-    context.df.setCustomStatus({
-        stage: 'GetAggregationData',
-        message: '將 GPT 和 Airbnb 的結果進行整合',
-        startTime: new Date().toISOString(),
-        progress: 100,
-        outputs: JSON.stringify(gptAggregationResult?.data?.content),
-        errors: []
-    });
-
-    outputs.push(gptAggregationResult);
+    try {
+        gptAggregationResult = yield context.df.callActivity('GPTAggregationData', {
+            UserDemand: userDemand,
+            AirbnbSearchResult: airbnbResult
+        });
+        outputs.push(gptAggregationResult);
+        context.df.setCustomStatus({
+            stage: 'GetAggregationData',
+            message: '將 GPT 和 Airbnb 的結果進行整合',
+            startTime: new Date().toISOString(),
+            progress: 100,
+            outputs: JSON.stringify(gptAggregationResult?.data?.content),
+            errors: []
+        });
+    } catch (error) {
+        context.log('將 GPT 和 Airbnb 的結果進行整合發生錯誤:', error);
+        outputs.push({ task: 'GPTAggregationData', success: false, error: error.message });
+        context.df.setCustomStatus({
+            stage: 'GetAggregationData',
+            message: '將 GPT 和 Airbnb 的結果進行整合',
+            startTime: new Date().toISOString(),
+            progress: 100,
+            outputs: JSON.stringify(gptAggregationResult?.data?.content),
+            errors: []
+        });
+    }
 
     // 給使用者選擇是否接受推薦
     const UserResponse = yield context.df.waitForExternalEvent('approve');

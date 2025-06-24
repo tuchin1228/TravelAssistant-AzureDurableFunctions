@@ -14,7 +14,7 @@
   },
   "extensions": {
     "durableTask": {
-      "hubName": "durable0624",
+      "hubName": "TestHubName",
       "storageProvider": {
         "type": "AzureStorage"
       }
