@@ -9,15 +9,17 @@
     }
   },
   "extensionBundle": {
-    "id": "Microsoft.Azure.Functions.ExtensionBundle",
-    "version": "[4.*, 5.0.0)"
+    "id": "Microsoft.Azure.Functions.ExtensionBundle.Preview",
+    "version": "[4.29.0, 5.0.0)"
   },
   "extensions": {
     "durableTask": {
-      "hubName": "TestHubName",
+      "hubName": "durable07",
       "storageProvider": {
-        "type": "AzureStorage"
+        "type": "azureManaged",
+        "connectionStringName": "DurableConnectionString" 
       }
+      
     }
   }
 }

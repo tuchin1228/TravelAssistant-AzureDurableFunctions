@@ -7,7 +7,7 @@ export default async function (input, context) {
             // 1. 建立 Transport，交由 SDK 直接 spawn child process
             const transport = new StdioClientTransport({
                 command: process.execPath,                        // = "node" 的完整路徑
-                args: [resolve("C:/Users/ChinWei/Desktop/mcp-server-airbnb/dist/index.js"),
+                args: [resolve(process.env.AIRBNB_MCP_SERVER_PATH),
                     "--ignore-robots-txt"],               // 依需要加參數
             });
 
