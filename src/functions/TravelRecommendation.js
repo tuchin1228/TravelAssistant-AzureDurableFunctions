@@ -1,8 +1,8 @@
 import { app, output } from '@azure/functions';
 import df from 'durable-functions';
 import GPTRecommendation from '../lib/GPTLocationRecommend.js';
-// import AirbnbRecommend from '../lib/AirbnbRecommend.js';
-// import GPTAggregationData from '../lib/GPTAggregationData.js';
+import AirbnbRecommend from '../lib/AirbnbRecommend.js';
+import GPTAggregationData from '../lib/GPTAggregationData.js';
 import SaveAzureStorage from '../lib/SaveAzureStorage.js';
 
 df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
@@ -75,6 +75,8 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
         return outputs;
     }
 
+    context.log('AirbnbRecommend result:', airbnbResult);
+    
     // 檢查 Airbnb 的結果是否為空
     if (airbnbResult?.data?.searchResults.length == 0) {
         context.log('No Airbnb results found');
@@ -155,26 +157,26 @@ df.app.orchestration('TravelRecommendationOrchestrator', function* (context) {
 
 // 透過GPT取得推薦的旅遊地點
 df.app.activity("GPTRecommendation", {
-    handler: (input, context) => {
+    handler: async (input, context) => {
         return GPTRecommendation(input, context);
     }
 });
 
 // 透過GPT取得的資訊，向Airbnb MCP 取得推薦的住宿項目
-// df.app.activity("AirbnbRecommend", {
-//     handler: async (input, context) => {
+df.app.activity("AirbnbRecommend", {
+    handler: async (input, context) => {
 
-//         await new Promise(resolve => setTimeout(resolve, 10000)); // 模擬 10 秒工作
-//         return AirbnbRecommend(input, context);
-//     }
-// });
+        await new Promise(resolve => setTimeout(resolve, 10000)); // 模擬 10 秒工作
+        return AirbnbRecommend(input, context);
+    }
+});
 
 // 將 GPT 和 Airbnb 的結果進行整合
-// df.app.activity("GPTAggregationData", {
-//     handler: (input, context) => {
-//         return GPTAggregationData(input, context);
-//     }
-// });
+df.app.activity("GPTAggregationData", {
+    handler: async (input, context) => {
+        return GPTAggregationData(input, context);
+    }
+});
 
 // 將結果儲存到 Azure Storage
 df.app.activity("SaveAzureStorage", {
