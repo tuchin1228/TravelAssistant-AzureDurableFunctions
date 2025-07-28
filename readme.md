@@ -1,6 +1,13 @@
-# 旅遊住宿推薦系統
+<div align="center">
 
-這是一個基於 Azure Functions 的旅遊推薦系統，使用 Durable Functions 協調工作流程，結合 Azure OpenAI Service 和 Azure Storage 服務提供旅遊地點推薦。
+# 旅遊住宿推薦助手
+
+<div align="left">
+ 這是一個基於 Azure Functions 的旅遊推薦系統，使用 Durable Functions 協調工作流程，結合 Azure OpenAI Service 和 Azure Storage 服務提供旅遊地點推薦，並儲存使用者選擇結果。
+</div>
+
+</div>
+
 
 ## 功能簡介
 
